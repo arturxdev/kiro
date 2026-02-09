@@ -1,5 +1,6 @@
 import { YearGrid } from "@/components/grid/YearGrid";
 import { COLORS } from "@/constants/colors";
+import { FONTS } from "@/constants/fonts";
 import { SPACING } from "@/constants/spacing";
 import { useCategories } from "@/hooks/useCategories";
 import { useEntries } from "@/hooks/useEntries";
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
   },
   yearText: {
     fontSize: 18,
-    fontWeight: "600",
+    fontFamily: FONTS.semibold,
     marginHorizontal: SPACING.xxl,
     color: COLORS.textPrimary,
   },

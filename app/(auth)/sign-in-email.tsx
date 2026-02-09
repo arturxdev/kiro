@@ -12,6 +12,7 @@ import {
 import { useRouter } from "expo-router";
 import { useSignIn } from "@clerk/clerk-expo";
 import { COLORS } from "@/constants/colors";
+import { FONTS } from "@/constants/fonts";
 
 export default function SignInEmailScreen() {
   const { signIn, setActive, isLoaded } = useSignIn();
@@ -118,7 +119,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     color: COLORS.textPrimary,
     marginBottom: 32,
     textAlign: "center",
@@ -152,7 +153,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: COLORS.background,
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: FONTS.semibold,
   },
   footer: {
     flexDirection: "row",
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
   footerLink: {
     color: COLORS.textPrimary,
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: FONTS.semibold,
   },
   backLink: {
     alignItems: "center",

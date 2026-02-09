@@ -10,4 +10,8 @@ la idea es que el usuario pueda registrar sus pensamientos y sentimientos, y que
 - r2 storage (cloudflare)
 
 
-para validar el usuo de las librerias usa: el mcp context7
+## notas
+
+- para validar el usuo de las librerias usa: el mcp context7
+- si vas usar un cambio a algo que toque la ui debes de consultar la skill de `frontend-design`
+- si vas modifcar un archivo que contenga un componente de react usa la skill de `vercel-react-native-skills` y `vercel-composition-patterns`

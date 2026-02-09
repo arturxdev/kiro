@@ -43,17 +43,7 @@ export function YearGrid({ year, entriesMap, categoriesMap, onDayPress }: YearGr
     >
       {/* Timeline spine */}
 
-      {months.map((month) => {
-        let temporalState: "past" | "current" | "future";
-        if (year < currentYear || (year === currentYear && month.month < currentMonth)) {
-          temporalState = "past";
-        } else if (year === currentYear && month.month === currentMonth) {
-          temporalState = "current";
-        } else {
-          temporalState = "future";
-        }
-
-        return (
+      {months.map((month) => (
           <View
             key={month.month}
             onLayout={(e) => {
@@ -66,11 +56,9 @@ export function YearGrid({ year, entriesMap, categoriesMap, onDayPress }: YearGr
               entriesMap={entriesMap}
               categoriesMap={categoriesMap}
               onDayPress={onDayPress}
-              temporalState={temporalState}
             />
           </View>
-        );
-      })}
+      ))}
     </ScrollView>
   );
 }

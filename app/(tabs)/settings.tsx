@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { COLORS } from "@/constants/colors";
+import { FONTS } from "@/constants/fonts";
 
 export default function SettingsScreen() {
   const { signOut } = useAuth();
@@ -49,7 +50,7 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: 28,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     color: COLORS.textPrimary,
     marginBottom: 32,
   },
@@ -83,6 +84,6 @@ const styles = StyleSheet.create({
   signOutText: {
     color: COLORS.danger,
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: FONTS.semibold,
   },
 });

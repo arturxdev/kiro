@@ -4,7 +4,16 @@ import { DataProvider } from "@/providers/DataProvider";
 import { SyncProvider } from "@/providers/SyncProvider";
 import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
-import { DarkTheme, ThemeProvider } from "@react-navigation/native";
+import {
+  Montserrat_200ExtraLight,
+  Montserrat_300Light,
+  Montserrat_400Regular,
+  Montserrat_500Medium,
+  Montserrat_600SemiBold,
+  Montserrat_700Bold,
+} from "@expo-google-fonts/montserrat";
+import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
+import { useFonts } from "expo-font";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -21,9 +30,10 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 const darkTheme = {
-  ...DarkTheme,
+  ...DefaultTheme,
+  dark: true,
   colors: {
-    ...DarkTheme.colors,
+    ...DefaultTheme.colors,
     background: COLORS.background,
     card: COLORS.background,
     text: COLORS.textPrimary,
@@ -55,9 +65,24 @@ function AuthRouter({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Montserrat_200ExtraLight,
+    Montserrat_300Light,
+    Montserrat_400Regular,
+    Montserrat_500Medium,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+  });
+
   useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   return (
     <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>

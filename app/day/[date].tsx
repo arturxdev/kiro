@@ -11,6 +11,7 @@ import {
 import { useLocalSearchParams } from "expo-router";
 import { useAuth } from "@clerk/clerk-expo";
 import { COLORS } from "@/constants/colors";
+import { FONTS } from "@/constants/fonts";
 import { SPACING } from "@/constants/spacing";
 import { formatDate } from "@/utils/date";
 import { useDB } from "@/db/DatabaseProvider";
@@ -174,7 +175,7 @@ const styles = StyleSheet.create({
   headerText: {
     color: COLORS.textPrimary,
     fontSize: 22,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
   },
   centered: {
     flex: 1,

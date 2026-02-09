@@ -14,7 +14,7 @@ async function onInit(db: SQLiteDatabase) {
 
 function LoadingFallback() {
   return (
-    <View style={{ flex: 1, backgroundColor: "#0F0F0F", justifyContent: "center", alignItems: "center" }}>
+    <View style={{ flex: 1, backgroundColor: "#1A1A1A", justifyContent: "center", alignItems: "center" }}>
       <ActivityIndicator color="#FFFFFF" />
     </View>
   );

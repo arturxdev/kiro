@@ -1,4 +1,5 @@
 import { COLORS } from "@/constants/colors";
+import { FONTS } from "@/constants/fonts";
 import type { Category, DayEntry } from "@/types";
 import type { MonthData } from "@/utils/calendar";
 import { formatDateKey } from "@/utils/calendar";
@@ -26,7 +27,6 @@ interface MonthBlockProps {
   entriesMap: Map<string, DayEntry[]>;
   categoriesMap: Map<string, Category>;
   onDayPress: (dateKey: string) => void;
-  temporalState: "past" | "current" | "future";
 }
 
 function MonthBlockInner({
@@ -35,7 +35,6 @@ function MonthBlockInner({
   entriesMap,
   categoriesMap,
   onDayPress,
-  temporalState,
 }: MonthBlockProps) {
   const cellStates = useMemo(() => {
     const map = new Map<string, CellVisualState>();
@@ -62,11 +61,8 @@ function MonthBlockInner({
     return result;
   }, [gridCells]);
 
-  const containerOpacity =
-    temporalState === "current" ? 1 : temporalState === "past" ? 0.55 : 0.3;
-
   return (
-    <View style={[styles.section, { opacity: containerOpacity }]}>
+    <View style={styles.section}>
       {/* Month header */}
       <View style={styles.headerRow}>
         <Text style={styles.monthName}>{FULL_MONTH_NAMES[month.month]}</Text>
@@ -179,7 +175,7 @@ const styles = StyleSheet.create({
   },
   monthName: {
     fontSize: 18,
-    fontWeight: "200",
+    fontFamily: FONTS.semibold,
     letterSpacing: 3,
     color: COLORS.textMonthName,
     textTransform: "uppercase",
@@ -207,7 +203,7 @@ const styles = StyleSheet.create({
   },
   weekdayText: {
     fontSize: 10,
-    fontWeight: "400",
+    fontFamily: FONTS.regular,
     color: COLORS.textWeekday,
     letterSpacing: 1,
   },
@@ -227,7 +223,7 @@ const styles = StyleSheet.create({
   cellFilled: {},
   dayNumber: {
     fontSize: 11,
-    fontWeight: "300",
+    fontFamily: FONTS.light,
   },
   dotRow: {
     flexDirection: "row",

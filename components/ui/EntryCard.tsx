@@ -2,6 +2,7 @@ import { View, Text, Pressable, Image, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeIn, Layout } from "react-native-reanimated";
 import { COLORS } from "@/constants/colors";
+import { FONTS } from "@/constants/fonts";
 import { RADIUS, SPACING } from "@/constants/spacing";
 import { formatDate } from "@/utils/date";
 import type { DayEntry, Category } from "@/types";
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
   categoryName: {
     color: COLORS.textSecondary,
     fontSize: 12,
-    fontWeight: "500",
+    fontFamily: FONTS.medium,
     letterSpacing: 0.3,
     textTransform: "uppercase",
   },
@@ -148,7 +149,7 @@ const styles = StyleSheet.create({
   imageTitle: {
     color: COLORS.textPrimary,
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: FONTS.semibold,
     lineHeight: 22,
   },
 
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
   textTitle: {
     color: COLORS.textPrimary,
     fontSize: 15,
-    fontWeight: "500",
+    fontFamily: FONTS.medium,
   },
   textCategory: {
     color: COLORS.textSecondary,

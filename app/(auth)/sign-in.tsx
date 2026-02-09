@@ -11,6 +11,7 @@ import { useOAuth, useSignInWithApple } from "@clerk/clerk-expo";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { COLORS } from "@/constants/colors";
+import { FONTS } from "@/constants/fonts";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -117,7 +118,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: "700",
+    fontFamily: FONTS.bold,
     color: COLORS.textPrimary,
     marginBottom: 8,
   },
@@ -129,15 +130,15 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   appleButton: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F5F5F5",
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: "center",
   },
   appleButtonText: {
-    color: "#000000",
+    color: "#1A1A1A",
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: FONTS.semibold,
   },
   googleButton: {
     backgroundColor: COLORS.surface,
@@ -150,7 +151,7 @@ const styles = StyleSheet.create({
   googleButtonText: {
     color: COLORS.textPrimary,
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: FONTS.semibold,
   },
   divider: {
     flexDirection: "row",
@@ -188,6 +189,6 @@ const styles = StyleSheet.create({
   signUpLink: {
     color: COLORS.textPrimary,
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: FONTS.semibold,
   },
 });
