@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useDB } from "@/db/DatabaseProvider";
+import { useDataContext } from "@/providers/DataProvider";
 import * as entryRepository from "@/db/repositories/entryRepository";
 import type { DayEntry } from "@/types";
 
 export function useEntries(year: number) {
   const db = useDB();
+  const { invalidationKey } = useDataContext();
   const [entriesMap, setEntriesMap] = useState<Map<string, DayEntry[]>>(
     new Map()
   );
@@ -26,7 +28,7 @@ export function useEntries(year: number) {
 
   useEffect(() => {
     refetch();
-  }, [refetch]);
+  }, [refetch, invalidationKey]);
 
   return { entriesMap, isLoading, error, refetch };
 }

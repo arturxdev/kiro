@@ -7,7 +7,7 @@ export async function getByDate(
   date: string
 ): Promise<DayEntry[]> {
   return db.getAllAsync<DayEntry>(
-    "SELECT * FROM day_entry WHERE date = ? ORDER BY created_at ASC",
+    "SELECT * FROM day_entry WHERE date = ? AND is_deleted = 0 ORDER BY created_at ASC",
     [date]
   );
 }
@@ -17,7 +17,7 @@ export async function getByYear(
   year: number
 ): Promise<DayEntry[]> {
   return db.getAllAsync<DayEntry>(
-    "SELECT * FROM day_entry WHERE date BETWEEN ? AND ? ORDER BY date, created_at",
+    "SELECT * FROM day_entry WHERE date BETWEEN ? AND ? AND is_deleted = 0 ORDER BY date, created_at",
     [`${year}-01-01`, `${year}-12-31`]
   );
 }
@@ -50,7 +50,7 @@ export async function getAll(
     search?: string;
   }
 ): Promise<DayEntry[]> {
-  const conditions: string[] = [];
+  const conditions: string[] = ["is_deleted = 0"];
   const params: (string | number)[] = [];
 
   if (options?.categoryId) {
@@ -63,7 +63,7 @@ export async function getAll(
     params.push(`%${options.search}%`, `%${options.search}%`);
   }
 
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+  const where = `WHERE ${conditions.join(" AND ")}`;
   let query = `SELECT * FROM day_entry ${where} ORDER BY date DESC`;
 
   if (options?.limit) {
@@ -88,7 +88,7 @@ export async function create(
   const now = new Date().toISOString();
 
   await db.runAsync(
-    "INSERT INTO day_entry (id, date, category_id, title, description, photo_url, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    "INSERT INTO day_entry (id, date, category_id, title, description, photo_url, is_deleted, sync_status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 0, 'pending', ?, ?)",
     [
       id,
       data.date,
@@ -133,6 +133,7 @@ export async function update(
 
   fields.push("updated_at = ?");
   values.push(new Date().toISOString());
+  fields.push("sync_status = 'pending'");
   values.push(id);
 
   await db.runAsync(
@@ -145,7 +146,11 @@ export async function remove(
   db: SQLiteDatabase,
   id: string
 ): Promise<void> {
-  await db.runAsync("DELETE FROM day_entry WHERE id = ?", [id]);
+  const now = new Date().toISOString();
+  await db.runAsync(
+    "UPDATE day_entry SET is_deleted = 1, sync_status = 'pending', updated_at = ? WHERE id = ?",
+    [now, id]
+  );
 }
 
 export async function getCountByDate(
@@ -153,8 +158,69 @@ export async function getCountByDate(
   date: string
 ): Promise<number> {
   const result = await db.getFirstAsync<{ count: number }>(
-    "SELECT COUNT(*) as count FROM day_entry WHERE date = ?",
+    "SELECT COUNT(*) as count FROM day_entry WHERE date = ? AND is_deleted = 0",
     [date]
   );
   return result?.count ?? 0;
+}
+
+// --- Sync helpers ---
+
+export async function getUnsynced(db: SQLiteDatabase): Promise<DayEntry[]> {
+  return db.getAllAsync<DayEntry>(
+    "SELECT * FROM day_entry WHERE sync_status = 'pending'"
+  );
+}
+
+export async function markSynced(
+  db: SQLiteDatabase,
+  ids: string[]
+): Promise<void> {
+  if (ids.length === 0) return;
+  const placeholders = ids.map(() => "?").join(",");
+  await db.runAsync(
+    `UPDATE day_entry SET sync_status = 'synced' WHERE id IN (${placeholders})`,
+    ids
+  );
+}
+
+export async function upsertFromServer(
+  db: SQLiteDatabase,
+  record: {
+    id: string;
+    date: string;
+    category_id: string;
+    title: string;
+    description: string | null;
+    photo_url: string | null;
+    is_deleted: boolean;
+    created_at: string;
+    updated_at: string;
+  }
+): Promise<void> {
+  await db.runAsync(
+    `INSERT INTO day_entry (id, date, category_id, title, description, photo_url, is_deleted, sync_status, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'synced', ?, ?)
+     ON CONFLICT(id) DO UPDATE SET
+       date = excluded.date,
+       category_id = excluded.category_id,
+       title = excluded.title,
+       description = excluded.description,
+       photo_url = excluded.photo_url,
+       is_deleted = excluded.is_deleted,
+       sync_status = 'synced',
+       updated_at = excluded.updated_at
+     WHERE day_entry.updated_at < excluded.updated_at`,
+    [
+      record.id,
+      record.date,
+      record.category_id,
+      record.title,
+      record.description,
+      record.photo_url,
+      record.is_deleted ? 1 : 0,
+      record.created_at,
+      record.updated_at,
+    ]
+  );
 }

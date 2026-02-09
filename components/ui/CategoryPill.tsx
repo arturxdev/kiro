@@ -1,4 +1,6 @@
-import { View, Text, Pressable } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import { COLORS } from "@/constants/colors";
 
 interface CategoryPillProps {
   name: string;
@@ -7,32 +9,76 @@ interface CategoryPillProps {
   onPress?: () => void;
 }
 
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
 export function CategoryPill({ name, color, isActive, onPress }: CategoryPillProps) {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.93, { damping: 15, stiffness: 300 });
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1, { damping: 15, stiffness: 300 });
+  };
+
   const content = (
     <View
-      className="flex-row items-center rounded-full px-3 py-1 mr-2"
-      style={{
-        backgroundColor: isActive ? "#2A2A2A" : "#1A1A1A",
-        borderWidth: isActive ? 1 : 0,
-        borderColor: isActive ? color : "transparent",
-      }}
+      style={[
+        styles.pill,
+        {
+          backgroundColor: isActive ? COLORS.border : COLORS.surface,
+          borderWidth: isActive ? 1 : 0,
+          borderColor: isActive ? color : "transparent",
+        },
+      ]}
     >
-      <View
-        className="w-2.5 h-2.5 rounded-full mr-1.5"
-        style={{ backgroundColor: color }}
-      />
-      <Text
-        className="text-xs"
-        style={{ color: isActive ? "#FFFFFF" : "#A0A0A0" }}
-      >
+      <View style={[styles.dot, { backgroundColor: color }]} />
+      <Text style={[styles.label, { color: isActive ? COLORS.textPrimary : COLORS.textSecondary }]}>
         {name}
       </Text>
     </View>
   );
 
   if (onPress) {
-    return <Pressable onPress={onPress}>{content}</Pressable>;
+    return (
+      <AnimatedPressable
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        style={animatedStyle}
+        accessibilityRole="button"
+        accessibilityLabel={`Category: ${name}`}
+        accessibilityState={{ selected: isActive }}
+      >
+        {content}
+      </AnimatedPressable>
+    );
   }
 
   return content;
 }
+
+const styles = StyleSheet.create({
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginRight: 8,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 6,
+  },
+  label: {
+    fontSize: 12,
+  },
+});

@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useDB } from "@/db/DatabaseProvider";
+import { useDataContext } from "@/providers/DataProvider";
 import * as entryRepository from "@/db/repositories/entryRepository";
 import type { DayEntry } from "@/types";
 
 export function useAllEntries(pageSize = 15) {
   const db = useDB();
+  const { invalidationKey } = useDataContext();
   const [entries, setEntries] = useState<DayEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -31,11 +33,13 @@ export function useAllEntries(pageSize = 15) {
     [db, pageSize]
   );
 
-  // Initial load
+  // Initial load + re-fetch on invalidation
   useEffect(() => {
+    setOffset(0);
+    setHasMore(true);
     setIsLoading(true);
     fetchPage(0, false).finally(() => setIsLoading(false));
-  }, [fetchPage]);
+  }, [fetchPage, invalidationKey]);
 
   const loadMore = useCallback(() => {
     if (isLoadingMore || !hasMore) return;

@@ -1,5 +1,6 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { handleSyncPush, handleSyncPull } from "./handlers/sync";
 
 interface Env {
   IMAGES_BUCKET: R2Bucket;
@@ -8,6 +9,7 @@ interface Env {
   R2_SECRET_ACCESS_KEY: string;
   R2_ACCOUNT_ID: string;
   R2_PUBLIC_URL: string;
+  NEON_DATABASE_URL: string;
 }
 
 interface JWTPayload {
@@ -140,6 +142,15 @@ export default {
 
     if (url.pathname.startsWith("/upload/images/") && request.method === "DELETE") {
       return handleDelete(request, env, userId);
+    }
+
+    // Sync routes
+    if (url.pathname === "/sync/push" && request.method === "POST") {
+      return handleSyncPush(request, env.NEON_DATABASE_URL, userId);
+    }
+
+    if (url.pathname === "/sync/pull" && request.method === "POST") {
+      return handleSyncPull(request, env.NEON_DATABASE_URL, userId);
     }
 
     return errorResponse("Not found", 404);

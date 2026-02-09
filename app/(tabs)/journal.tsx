@@ -1,29 +1,43 @@
-import { View, Text, FlatList, ActivityIndicator } from "react-native";
-import { useAuth } from "@clerk/clerk-expo";
+import { EntryCard } from "@/components/ui/EntryCard";
 import { COLORS } from "@/constants/colors";
 import { useDB } from "@/db/DatabaseProvider";
+import * as entryRepository from "@/db/repositories/entryRepository";
 import { useAllEntries } from "@/hooks/useAllEntries";
 import { useCategories } from "@/hooks/useCategories";
-import { EntryCard } from "@/components/ui/EntryCard";
-import * as entryRepository from "@/db/repositories/entryRepository";
+import { useDataContext } from "@/providers/DataProvider";
+import { useSyncContext } from "@/providers/SyncProvider";
 import { deleteImage } from "@/utils/imageService";
+import { useAuth } from "@clerk/clerk-expo";
+import { ActivityIndicator, Alert, FlatList, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function JournalScreen() {
+  const insets = useSafeAreaInsets();
   const db = useDB();
   const { getToken } = useAuth();
   const { categoriesMap } = useCategories();
-  const { entries, isLoading, isLoadingMore, hasMore, loadMore, refetch } =
+  const { entries, isLoading, isLoadingMore, hasMore, loadMore } =
     useAllEntries(15);
+  const { triggerSync } = useSyncContext();
+  const { invalidate } = useDataContext();
 
-  async function handleDelete(id: string, photoUrl?: string) {
-    if (photoUrl) {
-      const token = await getToken();
-      if (token) {
-        await deleteImage(photoUrl, token);
-      }
-    }
-    await entryRepository.remove(db, id);
-    refetch();
+  function handleDelete(id: string, photoUrl?: string) {
+    Alert.alert("Delete entry", "Are you sure you want to delete this entry?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          if (photoUrl) {
+            const token = await getToken();
+            if (token) await deleteImage(photoUrl, token);
+          }
+          await entryRepository.remove(db, id);
+          invalidate();
+          triggerSync();
+        },
+      },
+    ]);
   }
 
   if (isLoading) {
@@ -34,6 +48,7 @@ export default function JournalScreen() {
           backgroundColor: COLORS.background,
           justifyContent: "center",
           alignItems: "center",
+          paddingTop: insets.top,
         }}
       >
         <ActivityIndicator color={COLORS.textSecondary} />
@@ -49,6 +64,7 @@ export default function JournalScreen() {
           backgroundColor: COLORS.background,
           justifyContent: "center",
           alignItems: "center",
+          paddingTop: insets.top,
         }}
       >
         <Text style={{ color: COLORS.textSecondary, fontSize: 14 }}>
@@ -65,7 +81,7 @@ export default function JournalScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={{
           paddingHorizontal: 20,
-          paddingTop: 16,
+          paddingTop: insets.top + 16,
           paddingBottom: 20,
           gap: 12,
         }}

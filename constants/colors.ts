@@ -26,6 +26,21 @@ export const COLORS = {
   // Grid
   cellEmpty: "#1A1A1A",
   cellFuture: "#111111",
+  gridBackground: "rgba(255,255,255,0.02)",
+  gridBorder: "rgba(255,255,255,0.06)",
+  cellPastEmpty: "#1C1C1C",
+
+  // Text opacities
+  textMonthName: "rgba(255,255,255,0.85)",
+  textWeekday: "rgba(255,255,255,0.22)",
+  textFuture: "rgba(255,255,255,0.18)",
+  textFilled: "rgba(255,255,255,0.9)",
+  textPastEmpty: "rgba(255,255,255,0.3)",
+
+  // Semantic
+  danger: "#EF4444",
+  todayBackground: "#FFFFFF",
+  todayText: "#0F0F0F",
 } as const;
 
 export const CELL_STATES = {

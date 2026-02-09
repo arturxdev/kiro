@@ -1,3 +1,4 @@
+import { COLORS } from "@/constants/colors";
 import type { Category, DayEntry } from "@/types";
 import type { MonthData } from "@/utils/calendar";
 import { formatDateKey } from "@/utils/calendar";
@@ -135,17 +136,19 @@ const DayCellInner = ({ dateKey, day, state, onPress }: DayCellProps) => {
 
   const textColor =
     state.status === "today"
-      ? "#0F0F0F"
+      ? COLORS.todayText
       : state.status === "future"
-        ? "rgba(255,255,255,0.18)"
+        ? COLORS.textFuture
         : state.status === "filled"
-          ? "rgba(255,255,255,0.9)"
-          : "rgba(255,255,255,0.3)";
+          ? COLORS.textFilled
+          : COLORS.textPastEmpty;
 
   return (
     <Pressable
       style={[styles.cellBase, styles.cellInner, cellStyle]}
       onPress={() => onPress(dateKey)}
+      accessibilityRole="button"
+      accessibilityLabel={`Day ${day}`}
     >
       <Text style={[styles.dayNumber, { color: textColor }]}>{day}</Text>
       {state.dotColors.length > 1 && (
@@ -178,13 +181,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "200",
     letterSpacing: 3,
-    color: "rgba(255,255,255,0.85)",
+    color: COLORS.textMonthName,
     textTransform: "uppercase",
   },
   gridWrapper: {
-    backgroundColor: "rgba(255,255,255,0.02)",
+    backgroundColor: COLORS.gridBackground,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(255,255,255,0.06)",
+    borderColor: COLORS.gridBorder,
     borderRadius: 4,
     padding: GRID_PADDING,
   },
@@ -205,7 +208,7 @@ const styles = StyleSheet.create({
   weekdayText: {
     fontSize: 10,
     fontWeight: "400",
-    color: "rgba(255,255,255,0.22)",
+    color: COLORS.textWeekday,
     letterSpacing: 1,
   },
   cellInner: {
@@ -213,13 +216,13 @@ const styles = StyleSheet.create({
   },
   cellFuture: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: "rgba(255,255,255,0.06)",
+    borderColor: COLORS.gridBorder,
   },
   cellPastEmpty: {
-    backgroundColor: "#1C1C1C",
+    backgroundColor: COLORS.cellPastEmpty,
   },
   cellToday: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.todayBackground,
   },
   cellFilled: {},
   dayNumber: {

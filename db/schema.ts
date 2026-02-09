@@ -34,4 +34,32 @@ export async function initializeDatabase(db: SQLiteDatabase): Promise<void> {
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `);
+
+  // Run migrations based on user_version
+  await runMigrations(db);
+}
+
+async function runMigrations(db: SQLiteDatabase): Promise<void> {
+  const result = await db.getFirstAsync<{ user_version: number }>(
+    "PRAGMA user_version"
+  );
+  const currentVersion = result?.user_version ?? 0;
+
+  if (currentVersion < 1) {
+    await migrateV1(db);
+  }
+}
+
+async function migrateV1(db: SQLiteDatabase): Promise<void> {
+  await db.execAsync(`
+    ALTER TABLE category ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE category ADD COLUMN sync_status TEXT NOT NULL DEFAULT 'pending';
+
+    ALTER TABLE day_entry ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE day_entry ADD COLUMN sync_status TEXT NOT NULL DEFAULT 'pending';
+
+    ALTER TABLE config ADD COLUMN sync_status TEXT NOT NULL DEFAULT 'pending';
+
+    PRAGMA user_version = 1;
+  `);
 }
