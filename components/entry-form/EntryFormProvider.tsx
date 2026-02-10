@@ -38,12 +38,10 @@ async function launchPicker(source: "gallery" | "camera"): Promise<string | null
       ? await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ["images"],
           quality: 1,
-          allowsEditing: true,
         })
       : await ImagePicker.launchCameraAsync({
           mediaTypes: ["images"],
           quality: 1,
-          allowsEditing: true,
         });
 
   if (result.canceled || !result.assets[0]) return null;

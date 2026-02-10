@@ -7,7 +7,7 @@ export async function getByDate(
   date: string
 ): Promise<DayEntry[]> {
   return db.getAllAsync<DayEntry>(
-    "SELECT * FROM day_entry WHERE date = ? AND is_deleted = 0 ORDER BY created_at ASC",
+    "SELECT * FROM day_entry WHERE date = ? AND is_deleted = 0 ORDER BY created_at DESC",
     [date]
   );
 }
@@ -82,13 +82,13 @@ export async function getAll(
 export async function create(
   db: SQLiteDatabase,
   data: Pick<DayEntry, "date" | "category_id" | "title"> &
-    Partial<Pick<DayEntry, "description" | "photo_url">>
+    Partial<Pick<DayEntry, "description" | "photo_url" | "local_photo_uri">>
 ): Promise<string> {
   const id = randomUUID();
   const now = new Date().toISOString();
 
   await db.runAsync(
-    "INSERT INTO day_entry (id, date, category_id, title, description, photo_url, is_deleted, sync_status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, 0, 'pending', ?, ?)",
+    "INSERT INTO day_entry (id, date, category_id, title, description, photo_url, local_photo_uri, is_deleted, sync_status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'pending', ?, ?)",
     [
       id,
       data.date,
@@ -96,6 +96,7 @@ export async function create(
       data.title,
       data.description ?? null,
       data.photo_url ?? null,
+      data.local_photo_uri ?? null,
       now,
       now,
     ]
@@ -107,7 +108,7 @@ export async function create(
 export async function update(
   db: SQLiteDatabase,
   id: string,
-  data: Partial<Pick<DayEntry, "category_id" | "title" | "description" | "photo_url">>
+  data: Partial<Record<"category_id" | "title" | "description" | "photo_url" | "local_photo_uri", string | null>>
 ): Promise<void> {
   const fields: string[] = [];
   const values: (string | null)[] = [];
@@ -127,6 +128,10 @@ export async function update(
   if (data.photo_url !== undefined) {
     fields.push("photo_url = ?");
     values.push(data.photo_url ?? null);
+  }
+  if (data.local_photo_uri !== undefined) {
+    fields.push("local_photo_uri = ?");
+    values.push(data.local_photo_uri ?? null);
   }
 
   if (fields.length === 0) return;
@@ -162,6 +167,16 @@ export async function getCountByDate(
     [date]
   );
   return result?.count ?? 0;
+}
+
+// --- Image upload queue ---
+
+export async function getPendingImageUploads(
+  db: SQLiteDatabase
+): Promise<DayEntry[]> {
+  return db.getAllAsync<DayEntry>(
+    "SELECT * FROM day_entry WHERE local_photo_uri IS NOT NULL AND photo_url IS NULL AND is_deleted = 0"
+  );
 }
 
 // --- Sync helpers ---

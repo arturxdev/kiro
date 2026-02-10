@@ -19,6 +19,7 @@ export interface DayEntry {
   title: string;
   description?: string;
   photo_url?: string;
+  local_photo_uri?: string;
   is_deleted: number; // 0 or 1
   sync_status: SyncStatus;
   created_at: string;

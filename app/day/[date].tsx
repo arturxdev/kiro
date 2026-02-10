@@ -28,7 +28,7 @@ import {
 } from "@/components/entry-form";
 import { useDataContext } from "@/providers/DataProvider";
 import * as entryRepository from "@/db/repositories/entryRepository";
-import { uploadImage, deleteImage } from "@/utils/imageService";
+import { uploadImage, deleteImage, persistImageLocally, deleteLocalImage } from "@/utils/imageService";
 
 export default function DayDetailScreen() {
   const { date } = useLocalSearchParams<{ date: string }>();
@@ -61,10 +61,15 @@ function DayDetailContent({ date }: { date: string }) {
       });
 
       if (form.selectedImage && userId) {
+        // Persist image locally first so it survives app restarts
+        const localUri = await persistImageLocally(form.selectedImage, entryId);
+        await entryRepository.update(db, entryId, { local_photo_uri: localUri });
+
+        // Attempt upload to R2
         const token = await getToken();
         if (token) {
           const result = await uploadImage({
-            imageUri: form.selectedImage,
+            imageUri: localUri,
             entryId,
             userId,
             clerkToken: token,
@@ -73,13 +78,11 @@ function DayDetailContent({ date }: { date: string }) {
           if (result.success && result.publicUrl) {
             await entryRepository.update(db, entryId, {
               photo_url: result.publicUrl,
+              local_photo_uri: null,
             });
-          } else {
-            Alert.alert(
-              "Image upload failed",
-              result.error ?? "The entry was saved without a photo."
-            );
+            await deleteLocalImage(entryId);
           }
+          // If upload fails, entry keeps local_photo_uri — will retry via queue
         }
       }
 
@@ -102,6 +105,8 @@ function DayDetailContent({ date }: { date: string }) {
             const token = await getToken();
             if (token) await deleteImage(photoUrl, token);
           }
+          // Clean up local image file if it exists
+          await deleteLocalImage(id);
           await entryRepository.remove(db, id);
           invalidate();
           triggerSync();

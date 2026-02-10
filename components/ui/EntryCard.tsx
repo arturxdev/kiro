@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { View, Text, Pressable, Image, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeIn, Layout } from "react-native-reanimated";
@@ -41,14 +42,30 @@ function DateLabel({ date }: { date: string }) {
 // --- Variants ---
 
 function WithImage({ entry, category, onDelete, showDate }: EntryCardProps) {
+  const imageUri = entry.photo_url ?? entry.local_photo_uri;
+  const isPending = !entry.photo_url && !!entry.local_photo_uri;
+  const [aspectRatio, setAspectRatio] = useState(16 / 9);
+
+  useEffect(() => {
+    if (!imageUri) return;
+    Image.getSize(imageUri, (w, h) => {
+      if (w && h) setAspectRatio(w / h);
+    });
+  }, [imageUri]);
+
   return (
     <View style={styles.imageCard}>
       <Image
-        source={{ uri: entry.photo_url! }}
-        style={styles.image}
+        source={{ uri: imageUri! }}
+        style={[styles.image, { aspectRatio }]}
         resizeMode="cover"
         accessibilityLabel={`Photo for entry: ${entry.title}`}
       />
+      {isPending && (
+        <View style={styles.pendingBadge}>
+          <Ionicons name="cloud-upload-outline" size={12} color={COLORS.textSecondary} />
+        </View>
+      )}
       <View style={styles.imageContent}>
         <View style={styles.row}>
           <View style={styles.flex}>
@@ -87,7 +104,7 @@ function TextOnly({ entry, category, onDelete, showDate }: EntryCardProps) {
 export function EntryCard(props: EntryCardProps) {
   return (
     <Animated.View entering={FadeIn.duration(200)} layout={Layout.springify()}>
-      {props.entry.photo_url ? <WithImage {...props} /> : <TextOnly {...props} />}
+      {(props.entry.photo_url || props.entry.local_photo_uri) ? <WithImage {...props} /> : <TextOnly {...props} />}
     </Animated.View>
   );
 }
@@ -140,8 +157,18 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 220,
     backgroundColor: COLORS.border,
+  },
+  pendingBadge: {
+    position: "absolute",
+    top: SPACING.sm,
+    right: SPACING.sm,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
   },
   imageContent: {
     padding: 14,

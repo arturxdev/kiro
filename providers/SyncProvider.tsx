@@ -4,6 +4,7 @@ import { useAuth } from "@clerk/clerk-expo";
 import { useDB } from "@/db/DatabaseProvider";
 import { useDataContext } from "@/providers/DataProvider";
 import { sync } from "@/services/syncService";
+import { processPendingImageUploads } from "@/services/imageUploadQueue";
 
 interface SyncContextValue {
   triggerSync: () => void;
@@ -21,7 +22,7 @@ export function useSyncContext(): SyncContextValue {
 
 export function SyncProvider({ children }: { children: ReactNode }) {
   const db = useDB();
-  const { isSignedIn, getToken } = useAuth();
+  const { isSignedIn, userId, getToken } = useAuth();
   const { invalidate } = useDataContext();
   const [isSyncing, setIsSyncing] = useState(false);
   const syncInProgress = useRef(false);
@@ -33,6 +34,15 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     setIsSyncing(true);
 
     try {
+      // Process pending image uploads before syncing
+      if (userId) {
+        const uploaded = await processPendingImageUploads(db, getToken, userId);
+        if (uploaded > 0) {
+          console.log(`[Sync] Uploaded ${uploaded} pending image(s)`);
+          invalidate();
+        }
+      }
+
       const result = await sync(db, getToken);
       if (result.pulled > 0) {
         invalidate();
@@ -46,7 +56,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       syncInProgress.current = false;
       setIsSyncing(false);
     }
-  }, [db, isSignedIn, getToken, invalidate]);
+  }, [db, isSignedIn, userId, getToken, invalidate]);
 
   // Sync on mount (when signed in)
   useEffect(() => {

@@ -48,6 +48,18 @@ async function runMigrations(db: SQLiteDatabase): Promise<void> {
   if (currentVersion < 1) {
     await migrateV1(db);
   }
+
+  if (currentVersion < 2) {
+    await migrateV2(db);
+  }
+}
+
+async function migrateV2(db: SQLiteDatabase): Promise<void> {
+  await db.execAsync(`
+    ALTER TABLE day_entry ADD COLUMN local_photo_uri TEXT;
+
+    PRAGMA user_version = 2;
+  `);
 }
 
 async function migrateV1(db: SQLiteDatabase): Promise<void> {

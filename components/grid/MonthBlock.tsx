@@ -14,11 +14,17 @@ const FULL_MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December",
 ];
 
+// Local color constants for MonthBlock
+const MB_COLORS = {
+  sectionBg: COLORS.surface,
+  divider: "rgba(255,255,255,0.15)",
+} as const;
+
 const HORIZONTAL_PADDING = 20;
-const GRID_PADDING = 8;
-const CELL_GAP = 3;
+const CELL_GAP = 4;
+const ROW_GAP = 8;
 const screenWidth = Dimensions.get("window").width;
-const gridInnerWidth = screenWidth - HORIZONTAL_PADDING * 2 - GRID_PADDING * 2;
+const gridInnerWidth = screenWidth - HORIZONTAL_PADDING * 2 - 24; // 24 = section horizontal padding (12*2)
 const CELL_SIZE = Math.floor((gridInnerWidth - CELL_GAP * 6) / 7);
 
 interface MonthBlockProps {
@@ -64,43 +70,41 @@ function MonthBlockInner({
   return (
     <View style={styles.section}>
       {/* Month header */}
-      <View style={styles.headerRow}>
-        <Text style={styles.monthName}>{FULL_MONTH_NAMES[month.month]}</Text>
-      </View>
+      <Text style={styles.monthName}>{FULL_MONTH_NAMES[month.month]}</Text>
 
-      {/* Grid container */}
-      <View style={styles.gridWrapper}>
-        {/* Weekday headers */}
-        <View style={styles.row}>
-          {WEEKDAY_LABELS.map((label, i) => (
-            <View key={i} style={[styles.cellBase, styles.weekdayCell]}>
-              <Text style={styles.weekdayText}>{label}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Day rows */}
-        {rows.map((row, ri) => (
-          <View key={ri} style={styles.row}>
-            {row.map((day, ci) => {
-              if (day === null) {
-                return <View key={`blank-${ri}-${ci}`} style={styles.cellBase} />;
-              }
-              const dateKey = formatDateKey(year, month.month, day);
-              const state = cellStates.get(dateKey)!;
-              return (
-                <DayCell
-                  key={dateKey}
-                  dateKey={dateKey}
-                  day={day}
-                  state={state}
-                  onPress={onDayPress}
-                />
-              );
-            })}
+      {/* Weekday headers */}
+      <View style={styles.row}>
+        {WEEKDAY_LABELS.map((label, i) => (
+          <View key={i} style={[styles.cellBase, styles.weekdayCell]}>
+            <Text style={styles.weekdayText}>{label}</Text>
           </View>
         ))}
       </View>
+
+      {/* Divider */}
+      <View style={styles.divider} />
+
+      {/* Day rows */}
+      {rows.map((row, ri) => (
+        <View key={ri} style={styles.row}>
+          {row.map((day, ci) => {
+            if (day === null) {
+              return <View key={`blank-${ri}-${ci}`} style={styles.cellBase} />;
+            }
+            const dateKey = formatDateKey(year, month.month, day);
+            const state = cellStates.get(dateKey)!;
+            return (
+              <DayCell
+                key={dateKey}
+                dateKey={dateKey}
+                day={day}
+                state={state}
+                onPress={onDayPress}
+              />
+            );
+          })}
+        </View>
+      ))}
     </View>
   );
 }
@@ -126,18 +130,18 @@ const DayCellInner = ({ dateKey, day, state, onPress }: DayCellProps) => {
       case "today":
         return styles.cellToday;
       case "filled":
-        return [styles.cellFilled, { backgroundColor: state.dominantColor ?? "#262626" }];
+        return [styles.cellFilled, { backgroundColor: state.dominantColor ?? "#7C3AED" }];
     }
   }, [state.status, state.dominantColor]);
 
   const textColor =
     state.status === "today"
       ? COLORS.todayText
-      : state.status === "future"
-        ? COLORS.textFuture
-        : state.status === "filled"
-          ? COLORS.textFilled
-          : COLORS.textPastEmpty;
+      : state.status === "filled"
+        ? COLORS.textFilled
+        : state.status === "pastEmpty"
+          ? COLORS.textPastEmpty
+          : COLORS.textFuture;
 
   return (
     <Pressable
@@ -165,32 +169,29 @@ const DayCell = memo(DayCellInner);
 const styles = StyleSheet.create({
   section: {
     marginBottom: 28,
-    paddingHorizontal: HORIZONTAL_PADDING,
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-    gap: 12,
+    marginHorizontal: HORIZONTAL_PADDING,
+    backgroundColor: MB_COLORS.sectionBg,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingTop: 16,
+    paddingBottom: 12,
   },
   monthName: {
-    fontSize: 18,
-    fontFamily: FONTS.semibold,
-    letterSpacing: 3,
-    color: COLORS.textMonthName,
-    textTransform: "uppercase",
+    fontSize: 22,
+    fontFamily: FONTS.bold,
+    color: COLORS.textPrimary,
+    textAlign: "center",
+    marginBottom: 14,
   },
-  gridWrapper: {
-    backgroundColor: COLORS.gridBackground,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COLORS.gridBorder,
-    borderRadius: 4,
-    padding: GRID_PADDING,
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: MB_COLORS.divider,
+    marginBottom: ROW_GAP,
   },
   row: {
     flexDirection: "row",
     gap: CELL_GAP,
-    marginBottom: CELL_GAP,
+    marginBottom: ROW_GAP,
   },
   cellBase: {
     width: CELL_SIZE,
@@ -199,41 +200,41 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   weekdayCell: {
-    height: 20,
+    height: 22,
   },
   weekdayText: {
-    fontSize: 10,
-    fontFamily: FONTS.regular,
+    fontSize: 11,
+    fontFamily: FONTS.medium,
     color: COLORS.textWeekday,
-    letterSpacing: 1,
   },
   cellInner: {
-    borderRadius: 2,
+    borderRadius: CELL_SIZE / 2,
   },
   cellFuture: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: COLORS.gridBorder,
+    // transparent — just dimmed text, no border or background
   },
   cellPastEmpty: {
-    backgroundColor: COLORS.cellPastEmpty,
+    // transparent — just dimmed text, no background
   },
   cellToday: {
     backgroundColor: COLORS.todayBackground,
   },
-  cellFilled: {},
+  cellFilled: {
+    // backgroundColor set inline via dominantColor
+  },
   dayNumber: {
-    fontSize: 11,
-    fontFamily: FONTS.light,
+    fontSize: 14,
+    fontFamily: FONTS.medium,
   },
   dotRow: {
     flexDirection: "row",
     position: "absolute",
-    bottom: 2,
+    bottom: 3,
     gap: 2,
   },
   dot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
   },
 });

@@ -1,4 +1,7 @@
 import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
+import { File, Directory, Paths } from "expo-file-system";
+
+const imagesDir = new Directory(Paths.document, "images");
 
 const WORKER_URL = (process.env.EXPO_PUBLIC_CLOUDFLARE_WORKER_URL ?? "").replace(/\/+$/, "");
 
@@ -100,6 +103,39 @@ export async function uploadImage({
       success: false,
       error: error instanceof Error ? error.message : "Unknown upload error",
     };
+  }
+}
+
+export async function persistImageLocally(
+  pickerUri: string,
+  entryId: string
+): Promise<string> {
+  if (!imagesDir.exists) {
+    imagesDir.create({ intermediates: true });
+  }
+
+  const compressedUri = await compressImage(pickerUri);
+  const compressedFile = new File(compressedUri);
+  const destFile = new File(imagesDir, `${entryId}.jpg`);
+
+  if (destFile.exists) {
+    destFile.delete();
+  }
+  compressedFile.copy(destFile);
+
+  console.log("[persistImageLocally] Saved to:", destFile.uri);
+  return destFile.uri;
+}
+
+export async function deleteLocalImage(entryId: string): Promise<void> {
+  try {
+    const file = new File(imagesDir, `${entryId}.jpg`);
+    if (file.exists) {
+      file.delete();
+      console.log("[deleteLocalImage] Deleted:", file.uri);
+    }
+  } catch {
+    // Ignore errors during cleanup
   }
 }
 
