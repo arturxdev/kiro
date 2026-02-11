@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Kiro - Diario personal de gratitud",
+    "name": "Kiro",
     "slug": "memento-mori",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -19,7 +19,7 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "3"
+      "buildNumber": "4"
     },
     "android": {
       "package": "com.mementomori.app",
@@ -38,7 +38,8 @@
     "plugins": [
       "expo-router",
       "expo-sqlite",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true
