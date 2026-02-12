@@ -129,9 +129,60 @@ export async function sync(
   let pulled = 0;
 
   // 5. Upsert pulled records into local DB
+
+  // Remove local-only (unsynced) categories before pull to prevent
+  // duplicates when seed categories have different IDs than server ones.
+  if (pullData.categories.length > 0) {
+    const serverIds = pullData.categories.map((c) => c.id);
+    const placeholders = serverIds.map(() => "?").join(",");
+    // Delete local categories that: (1) aren't in the server set, (2) haven't
+    // been synced, and (3) have no entries referencing them.
+    await db.runAsync(
+      `DELETE FROM category
+       WHERE id NOT IN (${placeholders})
+         AND sync_status = 'pending'
+         AND id NOT IN (SELECT DISTINCT category_id FROM day_entry WHERE is_deleted = 0)`,
+      serverIds
+    );
+  }
+
   for (const cat of pullData.categories) {
     await categoryRepository.upsertFromServer(db, cat);
     pulled++;
+  }
+
+  // Deduplicate categories by name — keep the newest, reassign entries, delete the rest.
+  if (pullData.categories.length > 0) {
+    await db.execAsync(`
+      UPDATE day_entry
+      SET category_id = (
+        SELECT c2.id FROM category c2
+        WHERE c2.name = (SELECT c3.name FROM category c3 WHERE c3.id = day_entry.category_id)
+          AND c2.is_deleted = 0
+        ORDER BY c2.updated_at DESC
+        LIMIT 1
+      ),
+      sync_status = 'pending'
+      WHERE category_id IN (
+        SELECT c.id FROM category c
+        WHERE c.is_deleted = 0
+          AND c.id != (
+            SELECT c2.id FROM category c2
+            WHERE c2.name = c.name AND c2.is_deleted = 0
+            ORDER BY c2.updated_at DESC
+            LIMIT 1
+          )
+      );
+
+      DELETE FROM category
+      WHERE is_deleted = 0
+        AND id != (
+          SELECT c2.id FROM category c2
+          WHERE c2.name = category.name AND c2.is_deleted = 0
+          ORDER BY c2.updated_at DESC
+          LIMIT 1
+        );
+    `);
   }
 
   for (const entry of pullData.entries) {
