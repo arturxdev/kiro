@@ -1,6 +1,7 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { handleSyncPush, handleSyncPull } from "./handlers/sync";
+import { handleDeleteAccount } from "./handlers/account";
 
 interface Env {
   IMAGES_BUCKET: R2Bucket;
@@ -151,6 +152,10 @@ export default {
 
     if (url.pathname === "/sync/pull" && request.method === "POST") {
       return handleSyncPull(request, env.NEON_DATABASE_URL, userId);
+    }
+
+    if (url.pathname === "/account" && request.method === "DELETE") {
+      return handleDeleteAccount(env, env.NEON_DATABASE_URL, userId);
     }
 
     return errorResponse("Not found", 404);
