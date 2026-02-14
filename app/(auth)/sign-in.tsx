@@ -6,6 +6,7 @@ import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import React, { useCallback, useEffect } from "react";
 import {
+  Alert,
   Image,
   Platform,
   StyleSheet,
@@ -60,22 +61,62 @@ export default function SignInScreen() {
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });
       }
-    } catch (err) {
-      console.error("Google sign-in error:", JSON.stringify(err, null, 2));
+    } catch (err: any) {
+      const errorInfo = `Code: ${err.code ?? "unknown"}\nMessage: ${err.message ?? "No message"}`;
+      console.error("[Google Auth] Error:", errorInfo);
+
+      if (__DEV__) {
+        Alert.alert("Google Sign-In Error", errorInfo);
+      }
     }
   }, [startOAuthFlow]);
 
   const handleAppleSignIn = useCallback(async () => {
     try {
-      const { createdSessionId, setActive } =
-        await startAppleAuthenticationFlow();
+      const result = await startAppleAuthenticationFlow();
 
-      if (createdSessionId && setActive) {
-        await setActive({ session: createdSessionId });
+      console.log("[Apple Auth] Result:", JSON.stringify({
+        createdSessionId: result.createdSessionId,
+        hasSetActive: !!result.setActive,
+        hasSignIn: !!result.signIn,
+        hasSignUp: !!result.signUp,
+      }, null, 2));
+
+      if (result.createdSessionId && result.setActive) {
+        await result.setActive({ session: result.createdSessionId });
+      } else {
+        // No session was created — log details for debugging
+        const signInStatus = result.signIn?.status;
+        const signUpStatus = result.signUp?.status;
+        const firstFactor = result.signIn?.firstFactorVerification;
+        const debugInfo = [
+          `Session ID: ${result.createdSessionId ?? "null"}`,
+          `SignIn status: ${signInStatus ?? "N/A"}`,
+          `SignUp status: ${signUpStatus ?? "N/A"}`,
+          `1st factor: ${JSON.stringify(firstFactor ?? {})}`,
+        ].join("\n");
+
+        console.warn("[Apple Auth] No session created:", debugInfo);
+
+        if (__DEV__) {
+          Alert.alert("Apple Auth Debug", debugInfo);
+        }
       }
     } catch (err: any) {
       if (err.code === "ERR_REQUEST_CANCELED") return;
-      console.error("Apple sign-in error:", JSON.stringify(err, null, 2));
+
+      const errorInfo = [
+        `Code: ${err.code ?? "unknown"}`,
+        `Message: ${err.message ?? "No message"}`,
+        `Errors: ${JSON.stringify(err.errors ?? [], null, 2)}`,
+        `ClerkTraceId: ${err.clerkTraceId ?? "N/A"}`,
+      ].join("\n");
+
+      console.error("[Apple Auth] Error:", errorInfo);
+
+      if (__DEV__) {
+        Alert.alert("Apple Sign-In Error", errorInfo);
+      }
     }
   }, [startAppleAuthenticationFlow]);
 
