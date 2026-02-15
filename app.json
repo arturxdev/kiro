@@ -17,7 +17,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "dev.contentbrain.mementomori",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Para tomar fotos y agregarlas a tus entradas del diario",
+        "NSPhotoLibraryUsageDescription": "Para seleccionar imágenes de tu galería y agregarlas a tus entradas del diario"
       },
       "buildNumber": "7"
     },

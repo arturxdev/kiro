@@ -107,6 +107,7 @@ export default function RootLayout() {
                         headerStyle: { backgroundColor: COLORS.background },
                         headerTintColor: COLORS.textPrimary,
                         title: "",
+                        headerBackTitle: "Regresar",
                       }}
                     />
                   </Stack>
