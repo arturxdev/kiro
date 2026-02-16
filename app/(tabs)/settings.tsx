@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
 import { useAuth, useUser } from "@clerk/clerk-expo";
-import { Trash2 } from "lucide-react-native";
+import { Trash2, Crown } from "lucide-react-native";
 import { useDB } from "@/db/DatabaseProvider";
+import { useRevenueCat } from "@/providers/RevenueCatProvider";
+import { useEntryLimit } from "@/hooks/useEntryLimit";
 import { COLORS } from "@/constants/colors";
 import { FONTS } from "@/constants/fonts";
 
@@ -12,7 +14,10 @@ export default function SettingsScreen() {
   const { signOut, getToken } = useAuth();
   const { user } = useUser();
   const db = useDB();
+  const { isPro, showPaywall, showCustomerCenter, restorePurchases } = useRevenueCat();
+  const { totalEntries, FREE_LIMIT } = useEntryLimit();
   const [deleting, setDeleting] = useState(false);
+  const [restoring, setRestoring] = useState(false);
 
   const handleSignOut = () => {
     Alert.alert("Cerrar sesión", "¿Estás seguro?", [
@@ -104,6 +109,59 @@ export default function SettingsScreen() {
           </Text>
         </View>
 
+        {/* Subscription section */}
+        <View style={styles.subscriptionCard}>
+          <View style={styles.subscriptionHeader}>
+            <Crown size={18} color={isPro ? "#FFD700" : COLORS.textSecondary} />
+            <Text style={styles.subscriptionTitle}>
+              {isPro ? "Plan Pro" : "Plan Gratuito"}
+            </Text>
+          </View>
+          {!isPro && (
+            <Text style={styles.subscriptionDetail}>
+              {totalEntries}/{FREE_LIMIT} entradas usadas
+            </Text>
+          )}
+        </View>
+
+        {isPro ? (
+          <TouchableOpacity
+            style={styles.manageButton}
+            onPress={() => showCustomerCenter()}
+          >
+            <Text style={styles.manageText}>Administrar suscripción</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.upgradeButton}
+            onPress={() => showPaywall()}
+          >
+            <Text style={styles.upgradeText}>Ser Pro</Text>
+          </TouchableOpacity>
+        )}
+
+        <TouchableOpacity
+          style={styles.restoreButton}
+          onPress={async () => {
+            setRestoring(true);
+            const restored = await restorePurchases();
+            setRestoring(false);
+            Alert.alert(
+              restored ? "Compras restauradas" : "Sin compras",
+              restored
+                ? "Tu suscripción Pro ha sido restaurada."
+                : "No se encontraron compras previas."
+            );
+          }}
+          disabled={restoring}
+        >
+          {restoring ? (
+            <ActivityIndicator color={COLORS.textSecondary} />
+          ) : (
+            <Text style={styles.restoreText}>Restaurar compras</Text>
+          )}
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
           <Text style={styles.signOutText}>Cerrar sesión</Text>
         </TouchableOpacity>
@@ -161,6 +219,67 @@ const styles = StyleSheet.create({
   userEmail: {
     color: COLORS.textPrimary,
     fontSize: 16,
+  },
+  subscriptionCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: 12,
+  },
+  subscriptionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  subscriptionTitle: {
+    color: COLORS.textPrimary,
+    fontSize: 16,
+    fontFamily: FONTS.semibold,
+  },
+  subscriptionDetail: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    marginTop: 4,
+    marginLeft: 26,
+  },
+  upgradeButton: {
+    backgroundColor: "#FFD700",
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  upgradeText: {
+    color: "#1A1A1A",
+    fontSize: 16,
+    fontFamily: FONTS.bold,
+  },
+  manageButton: {
+    backgroundColor: COLORS.surface,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    marginBottom: 8,
+  },
+  manageText: {
+    color: COLORS.textPrimary,
+    fontSize: 16,
+    fontFamily: FONTS.semibold,
+  },
+  restoreButton: {
+    borderRadius: 12,
+    padding: 12,
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  restoreText: {
+    color: COLORS.textSecondary,
+    fontSize: 14,
+    textDecorationLine: "underline",
   },
   signOutButton: {
     backgroundColor: COLORS.surface,

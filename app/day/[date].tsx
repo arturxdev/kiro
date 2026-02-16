@@ -27,6 +27,8 @@ import {
   EntryInput,
 } from "@/components/entry-form";
 import { useDataContext } from "@/providers/DataProvider";
+import { useEntryLimit } from "@/hooks/useEntryLimit";
+import { useRevenueCat } from "@/providers/RevenueCatProvider";
 import * as entryRepository from "@/db/repositories/entryRepository";
 import { uploadImage, deleteImage, persistImageLocally, deleteLocalImage } from "@/utils/imageService";
 
@@ -47,10 +49,17 @@ function DayDetailContent({ date }: { date: string }) {
   const { entries, isLoading } = useDayEntries(date);
   const { triggerSync } = useSyncContext();
   const { invalidate } = useDataContext();
+  const { canCreateEntry, remaining, isPro, FREE_LIMIT } = useEntryLimit();
+  const { showPaywall } = useRevenueCat();
   const form = useEntryForm();
 
   async function handleAdd() {
     if (!form.canSubmit || !form.selectedCategoryId) return;
+
+    if (!canCreateEntry) {
+      const purchased = await showPaywall();
+      if (!purchased) return;
+    }
 
     form.setIsUploading(true);
     try {
@@ -155,6 +164,13 @@ function DayDetailContent({ date }: { date: string }) {
 
         {/* Add form */}
         <View style={styles.formContainer}>
+          {!isPro && (
+            <Text style={styles.limitText}>
+              {remaining > 0
+                ? `${remaining} entradas gratis restantes`
+                : "Límite alcanzado — hazte Pro para continuar"}
+            </Text>
+          )}
           <CategorySelector categories={categories} />
           <ImagePickerButtons />
           <EntryInput onSubmit={handleAdd} />
@@ -203,5 +219,12 @@ const styles = StyleSheet.create({
     paddingTop: SPACING.md,
     paddingBottom: SPACING.lg,
     backgroundColor: COLORS.background,
+  },
+  limitText: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    fontFamily: FONTS.regular,
+    textAlign: "center",
+    marginBottom: SPACING.sm,
   },
 });

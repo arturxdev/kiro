@@ -1,17 +1,30 @@
 {
-    "cli": {
-        "version": ">= 15.0.0"
+  "cli": {
+    "version": ">= 15.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
     },
-    "build": {
-        "production": {
-            "ios": {
-                "autoIncrement": "buildNumber"
-            }
-        }
+    "preview": {
+      "distribution": "internal"
     },
-    "submit": {
-        "production": {
-            "ios": {}
-        }
+    "ios-simulator": {
+      "extends": "development",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "production": {
+      "ios": {
+        "autoIncrement": "buildNumber"
+      }
     }
+  },
+  "submit": {
+    "production": {
+      "ios": {}
+    }
+  }
 }
