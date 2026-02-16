@@ -50,7 +50,8 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
 
     try {
       Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
-      const apiKey = "test_BGxGqfYjjIrRtPhHDChAjGeugHw";
+      const apiKey = process.env.EXPO_PUBLIC_RC_API_KEY;
+      if (!apiKey) throw new Error("Missing EXPO_PUBLIC_RC_API_KEY");
       Purchases.configure({ apiKey });
     } catch {}
   }, []);
