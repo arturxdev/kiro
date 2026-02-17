@@ -7,7 +7,7 @@ import {
   useRef,
   type ReactNode,
 } from "react";
-import { Modal, View } from "react-native";
+import { Modal, Platform, View } from "react-native";
 import Purchases, {
   type CustomerInfo,
   LOG_LEVEL,
@@ -50,8 +50,10 @@ export function RevenueCatProvider({ children }: { children: ReactNode }) {
 
     try {
       Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
-      const apiKey = process.env.EXPO_PUBLIC_RC_API_KEY;
-      if (!apiKey) throw new Error("Missing EXPO_PUBLIC_RC_API_KEY");
+      const apiKey = Platform.OS === "ios"
+        ? process.env.EXPO_PUBLIC_RC_APPLE_API_KEY
+        : process.env.EXPO_PUBLIC_RC_GOOGLE_API_KEY;
+      if (!apiKey) throw new Error("Missing RevenueCat API key for " + Platform.OS);
       Purchases.configure({ apiKey });
     } catch {}
   }, []);
