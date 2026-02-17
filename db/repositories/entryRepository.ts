@@ -169,6 +169,13 @@ export async function getCountByDate(
   return result?.count ?? 0;
 }
 
+export async function getTotalCount(db: SQLiteDatabase): Promise<number> {
+  const result = await db.getFirstAsync<{ count: number }>(
+    "SELECT COUNT(*) as count FROM day_entry WHERE is_deleted = 0"
+  );
+  return result?.count ?? 0;
+}
+
 // --- Image upload queue ---
 
 export async function getPendingImageUploads(

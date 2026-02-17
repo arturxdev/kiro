@@ -1,6 +1,7 @@
 import { COLORS } from "@/constants/colors";
 import { DatabaseProvider } from "@/db/DatabaseProvider";
 import { DataProvider } from "@/providers/DataProvider";
+import { RevenueCatProvider } from "@/providers/RevenueCatProvider";
 import { SyncProvider } from "@/providers/SyncProvider";
 import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/clerk-expo";
 import { tokenCache } from "@clerk/clerk-expo/token-cache";
@@ -88,8 +89,9 @@ export default function RootLayout() {
     <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
       <ClerkLoaded>
         <DatabaseProvider>
-          <DataProvider>
-            <SyncProvider>
+          <RevenueCatProvider>
+            <DataProvider>
+              <SyncProvider>
               <ThemeProvider value={darkTheme}>
                 <AuthRouter>
                   <Stack>
@@ -114,8 +116,9 @@ export default function RootLayout() {
                 </AuthRouter>
                 <StatusBar style="light" />
               </ThemeProvider>
-            </SyncProvider>
-          </DataProvider>
+              </SyncProvider>
+            </DataProvider>
+          </RevenueCatProvider>
         </DatabaseProvider>
       </ClerkLoaded>
     </ClerkProvider>

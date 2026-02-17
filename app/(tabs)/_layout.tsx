@@ -18,7 +18,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Grilla",
+          title: "Calendario",
           tabBarIcon: ({ color, size }) => (
             <Feather name="grid" color={color} size={size} />
           ),
@@ -27,7 +27,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="journal"
         options={{
-          title: "Journal",
+          title: "Diario",
           tabBarIcon: ({ color, size }) => (
             <Feather name="book-open" color={color} size={size} />
           ),
@@ -36,7 +36,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Settings",
+          title: "Config",
           tabBarIcon: ({ color, size }) => (
             <Feather name="sliders" color={color} size={size} />
           ),
