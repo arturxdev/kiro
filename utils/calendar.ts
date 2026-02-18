@@ -41,3 +41,55 @@ export function isFuture(dateKey: string): boolean {
 export function isPast(dateKey: string): boolean {
   return dateKey < getTodayKey();
 }
+
+// --- Photo Grid utilities ---
+
+export interface PhotoGridDay {
+  dateKey: string;
+  dayNumber: number;
+  dayOfWeek: number; // 0 = Sunday
+  isToday: boolean;
+}
+
+export interface PhotoGridRow {
+  id: string;
+  cells: (PhotoGridDay | null)[]; // always length 3
+}
+
+const WEEKDAY_SHORT = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+
+export function getWeekdayShort(dayOfWeek: number): string {
+  return WEEKDAY_SHORT[dayOfWeek];
+}
+
+export function buildPhotoGridRows(
+  year: number,
+  month: number,
+  todayKey: string
+): PhotoGridRow[] {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const days: PhotoGridDay[] = [];
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateKey = formatDateKey(year, month, d);
+    if (dateKey > todayKey) break;
+    const jsDate = new Date(year, month, d);
+    days.push({
+      dateKey,
+      dayNumber: d,
+      dayOfWeek: jsDate.getDay(),
+      isToday: dateKey === todayKey,
+    });
+  }
+
+  const rows: PhotoGridRow[] = [];
+  for (let i = 0; i < days.length; i += 3) {
+    const chunk: (PhotoGridDay | null)[] = days.slice(i, i + 3);
+    while (chunk.length < 3) chunk.push(null);
+    rows.push({
+      id: `${year}-${month}-row-${Math.floor(i / 3)}`,
+      cells: chunk,
+    });
+  }
+  return rows;
+}

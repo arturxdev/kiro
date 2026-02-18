@@ -1,77 +1,77 @@
-import { YearGrid } from "@/components/grid/YearGrid";
+import { PhotoMonthSection } from "@/components/grid/PhotoMonthSection";
 import { COLORS } from "@/constants/colors";
-import { FONTS } from "@/constants/fonts";
-import { SPACING } from "@/constants/spacing";
-import { useCategories } from "@/hooks/useCategories";
-import { useEntries } from "@/hooks/useEntries";
-import { Feather } from "@expo/vector-icons";
+import { usePhotoCalendar } from "@/hooks/usePhotoCalendar";
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { useMemo } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const currentYear = new Date().getFullYear();
+const COLUMNS = 3;
+const GAP = 2;
+const H_PADDING = 2;
 
 export default function GridScreen() {
-  const [year, setYear] = useState(currentYear);
-  const { entriesMap, isLoading: entriesLoading } = useEntries(year);
-  const { categoriesMap, isLoading: categoriesLoading } = useCategories();
+  const { months, entriesMap, isLoading, isLoadingMore, canLoadMore, loadMore } =
+    usePhotoCalendar();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
 
-  const isLoading = entriesLoading || categoriesLoading;
-
-  const handlePrevYear = () => setYear((y) => y - 1);
-  const handleNextYear = () => {
-    if (year < currentYear) setYear((y) => y + 1);
-  };
+  const { cellWidth, cellHeight } = useMemo(() => {
+    const cw = Math.floor((width - H_PADDING * 2 - GAP * (COLUMNS - 1)) / COLUMNS);
+    return { cellWidth: cw, cellHeight: Math.floor(cw * 1.4) };
+  }, [width]);
 
   const handleDayPress = (dateKey: string) => {
     router.push(`/day/${dateKey}`);
   };
 
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centered, { paddingTop: insets.top }]}>
+        <ActivityIndicator color={COLORS.textSecondary} />
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Year header */}
-      <View style={styles.yearHeader}>
-        <Pressable
-          onPress={handlePrevYear}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Previous year"
-        >
-          <Feather name="chevron-left" size={22} color={COLORS.textPrimary} />
-        </Pressable>
-        <Text style={styles.yearText} accessibilityRole="header">
-          {year}
-        </Text>
-        <Pressable
-          onPress={handleNextYear}
-          hitSlop={12}
-          accessibilityRole="button"
-          accessibilityLabel="Next year"
-        >
-          <Feather
-            name="chevron-right"
-            size={22}
-            color={year < currentYear ? COLORS.textPrimary : COLORS.textSecondary}
+      <FlatList
+        data={months}
+        keyExtractor={(item) => item.key}
+        inverted
+        renderItem={({ item }) => (
+          <PhotoMonthSection
+            year={item.year}
+            month={item.month}
+            entriesMap={entriesMap}
+            onDayPress={handleDayPress}
+            cellWidth={cellWidth}
+            cellHeight={cellHeight}
           />
-        </Pressable>
-      </View>
-
-      {/* Grid */}
-      {isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator color={COLORS.textSecondary} />
-        </View>
-      ) : (
-        <YearGrid
-          year={year}
-          entriesMap={entriesMap}
-          categoriesMap={categoriesMap}
-          onDayPress={handleDayPress}
-        />
-      )}
+        )}
+        onEndReached={canLoadMore ? loadMore : undefined}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          isLoadingMore ? (
+            <View style={styles.loadingMore}>
+              <ActivityIndicator color={COLORS.textSecondary} />
+            </View>
+          ) : null
+        }
+        contentContainerStyle={[styles.listContent, { paddingHorizontal: H_PADDING }]}
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews
+        initialNumToRender={3}
+        maxToRenderPerBatch={2}
+        windowSize={5}
+      />
     </View>
   );
 }
@@ -81,22 +81,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
-  yearHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: SPACING.md,
-    paddingHorizontal: SPACING.lg,
-  },
-  yearText: {
-    fontSize: 18,
-    fontFamily: FONTS.semibold,
-    marginHorizontal: SPACING.xxl,
-    color: COLORS.textPrimary,
-  },
   centered: {
-    flex: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+  listContent: {
+    paddingBottom: 20,
+  },
+  loadingMore: {
+    paddingVertical: 16,
+    alignItems: "center",
   },
 });
