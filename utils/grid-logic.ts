@@ -71,6 +71,22 @@ function getDominantCategory(
   return best ? categoriesMap.get(best.id)?.color ?? null : null;
 }
 
+export function getDayPhotoUri(entries: DayEntry[] | undefined): string | null {
+  if (!entries || entries.length === 0) return null;
+  const sorted = [...entries].sort((a, b) =>
+    b.created_at.localeCompare(a.created_at)
+  );
+  for (const entry of sorted) {
+    const uri = entry.photo_url ?? entry.local_photo_uri ?? null;
+    if (uri) return uri;
+  }
+  return null;
+}
+
+export function dayHasMedia(entries: DayEntry[] | undefined): boolean {
+  return getDayPhotoUri(entries) !== null;
+}
+
 function getDotColors(
   entries: DayEntry[],
   categoriesMap: Map<string, Category>

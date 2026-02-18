@@ -176,6 +176,33 @@ export async function getTotalCount(db: SQLiteDatabase): Promise<number> {
   return result?.count ?? 0;
 }
 
+export async function getEarliestEntryDate(
+  db: SQLiteDatabase
+): Promise<string | null> {
+  const result = await db.getFirstAsync<{ date: string }>(
+    "SELECT MIN(date) as date FROM day_entry WHERE is_deleted = 0"
+  );
+  return result?.date ?? null;
+}
+
+export async function getByDateRangeGrouped(
+  db: SQLiteDatabase,
+  startDate: string,
+  endDate: string
+): Promise<Map<string, DayEntry[]>> {
+  const entries = await db.getAllAsync<DayEntry>(
+    "SELECT * FROM day_entry WHERE date BETWEEN ? AND ? AND is_deleted = 0 ORDER BY date, created_at",
+    [startDate, endDate]
+  );
+  const map = new Map<string, DayEntry[]>();
+  for (const entry of entries) {
+    const existing = map.get(entry.date);
+    if (existing) existing.push(entry);
+    else map.set(entry.date, [entry]);
+  }
+  return map;
+}
+
 // --- Image upload queue ---
 
 export async function getPendingImageUploads(
